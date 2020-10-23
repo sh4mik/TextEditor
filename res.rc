@@ -1,0 +1,16 @@
+#include <windows.h>
+#include "menu.h"
+
+MainMenu MENU
+{
+    POPUP "File"
+    {
+        MENUITEM "Open", ID_FILE_OPEN
+        MENUITEM "Exit", IDM_EXIT
+    }
+    POPUP "View"
+    {
+        MENUITEM "Default", DEFAULT
+        MENUITEM "Layout", LAYOUT
+    }
+}
