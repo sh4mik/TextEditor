@@ -5,5 +5,6 @@
 #define IDM_EXIT 2
 #define DEFAULT 3
 #define LAYOUT 4
+#define SAVE 5
 
 #endif // MENU_H_INCLUDED

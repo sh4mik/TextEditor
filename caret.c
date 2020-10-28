@@ -67,6 +67,42 @@ void CaretRight(caret_t * caret, data_t * data, pos_t * pos) {
 
 }
 
+void CaretPageUp(caret_t * caret, data_t * data, pos_t * pos, rsize_t * rSize) {
+    int i = 0;
+
+    caret->sym = 0;
+    for (i = 0; i < rSize->height - 1; ++i) {
+        if (caret->line->number == 0)
+            return;
+        caret->line = caret->line->prev;
+    }
+
+}
+
+void CaretPageDown(caret_t * caret, data_t * data, pos_t * pos, rsize_t * rSize) {
+    int i = 0;
+
+    caret->sym = 0;
+    for (i = 0; i < rSize->height - 1; ++i) {
+        if (caret->line == NULL || caret->line->number == data->linesSize-1)
+            return;
+        caret->line = caret->line->next;
+    }
+}
+
+void CaretBegin(caret_t * caret, data_t * data) {
+    caret->sym = 0;
+    caret->line = data->firstLine;
+}
+
+void CaretEnd(caret_t * caret, data_t * data) {
+    caret->sym = 0;
+    while (caret->line != NULL && caret->line->number < data->linesSize-1) {
+        caret->line = caret->line->next;
+    }
+}
+
+
 void CaretDraw(caret_t * caret, data_t * data, pos_t * pos, TEXTMETRIC * tm, rsize_t * rSize) { // TODO normal
 
     int width = rSize->width;

@@ -11,12 +11,23 @@
 #include "write.h"
 #include "menu.h"
 #include "caret.h"
+#include "save.h"
 
 #include "debug.h"
 
 // start parameters
 #define FILENAME "very_small.txt"
 #define MODE DEFAULT
+
+// 1 - caret
+// 7 - line
+#define CARET_SIZE_COEFF 7
+
+#define CARET_LENGTH 0.9
+
+// GetStockObject(WHITE_BRUSH)
+// COLOR_BACKGROUND
+#define MY_BACK_COLOR GetStockObject(WHITE_BRUSH)
 
 /*  Declare Windows procedure  */
 LRESULT CALLBACK WindowProcedure (HWND, UINT, WPARAM, LPARAM);
@@ -49,7 +60,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,  // описатель самой программе
     wincl.cbClsExtra = 0;                      // Ќет дополнительных данных класса
     wincl.cbWndExtra = 0;                      // Ќет дополнительных данных окна
     /* »спользуем цвет по умолчанию Windows в качестве фона окна. */
-    wincl.hbrBackground = (HBRUSH) COLOR_BACKGROUND;
+    wincl.hbrBackground = (HBRUSH) MY_BACK_COLOR;
 
     /* –егистраци€ класса окна */
     if (!RegisterClassEx (&wincl))
@@ -127,7 +138,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
     static HFONT hFont;
     static HMENU hMenu;
     static int mode;
-    static char file_name[MAX_PATH] = "";
+    static char file_name[MAX_PATH] = FILENAME;
     static data_t data = {NULL, 0, NULL, 0, 0}; // TODO структура может изменитьс€
     static caret_t caret;
     static pos_t pos;
@@ -174,7 +185,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             CheckMenuItem(hMenu,MODE,MF_CHECKED);
 
             // создаем каретку
-            CreateCaret(hwnd, NULL, tm.tmAveCharWidth / CARET_SIZE_COEFF, tm.tmHeight);
+            CreateCaret(hwnd, NULL, tm.tmAveCharWidth / CARET_SIZE_COEFF, tm.tmHeight * CARET_LENGTH);
 
 
             FileRead(hwnd, FILENAME, &data); // TODO to delete
@@ -287,7 +298,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                     //если файл успешно считан и данные обработаны
                     if ((FileRead(hwnd, file_name, &data) == 1)){
                         DestroyCaret();
-                        CreateCaret(hwnd, NULL, tm.tmAveCharWidth / CARET_SIZE_COEFF, tm.tmHeight);
+                        CreateCaret(hwnd, NULL, tm.tmAveCharWidth / CARET_SIZE_COEFF, tm.tmHeight * CARET_LENGTH);
                         pos.abs = data.text;
 
                         if (mode==DEFAULT) {
@@ -306,6 +317,11 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                     }
                     break;
 
+                }
+                case SAVE:
+                {
+                    SaveFile(hwnd, &data, &file_name);
+                    break;
                 }
                 case IDM_EXIT:
                 {
@@ -344,15 +360,19 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 break;
             case VK_PRIOR:
                 // SendMessage(hwnd, WM_VSCROLL, MAKELONG(SB_PAGEUP, 0), 0L);
+                CaretPageUp(&caret, &data, &pos, &rSize);
                 break;
             case VK_NEXT:
                 //SendMessage(hwnd, WM_VSCROLL, MAKELONG(SB_PAGEDOWN, 0), 0L);
+                CaretPageDown(&caret, &data, &pos, &rSize);
                 break;
             case VK_HOME:
                 // SendMessage(hwnd, WM_VSCROLL, MAKELONG(SB_TOP, 0), 0L);
+                CaretBegin(&caret, &data);
                 break;
             case VK_END:
                 //SendMessage(hwnd, WM_VSCROLL, MAKELONG(SB_BOTTOM, 0), 0L);
+                CaretEnd(&caret, &data);
                 break;
             default:
                 break;

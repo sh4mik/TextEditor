@@ -3,8 +3,6 @@
 
 #include "struct.h"
 
-#define CARET_SIZE_COEFF 1
-
 typedef struct caret {
     line_t * line;
     int sym;
@@ -18,6 +16,11 @@ void CaretUp(caret_t * caret, data_t * data, pos_t * pos);
 void CaretDown(caret_t * caret, data_t * data, pos_t * pos);
 void CaretLeft(caret_t * caret, data_t * data, pos_t * pos);
 void CaretRight(caret_t * caret, data_t * data, pos_t * pos);
+
+void CaretPageUp(caret_t * caret, data_t * data, pos_t * pos, rsize_t * rSize);
+void CaretPageDown(caret_t * caret, data_t * data, pos_t * pos, rsize_t * rSize);
+void CaretBegin(caret_t * caret, data_t * data);
+void CaretEnd(caret_t * caret, data_t * data);
 
 void CaretDraw(caret_t * caret, data_t * data, pos_t * pos, TEXTMETRIC * tm, rsize_t * rSize);
 

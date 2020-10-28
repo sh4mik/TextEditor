@@ -6,6 +6,7 @@ MainMenu MENU
     POPUP "File"
     {
         MENUITEM "Open", ID_FILE_OPEN
+        MENUITEM "Save", SAVE
         MENUITEM "Exit", IDM_EXIT
     }
 }
