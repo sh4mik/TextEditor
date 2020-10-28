@@ -28,7 +28,7 @@ int PrintLine(HDC hdc, line_t * line, TEXTMETRIC * tm, int v, int h) {
     block_t * block = line->first;
     int blockPos = 0;
     int totalSize = 0;
-        while (h + 1 > totalSize + block->size) {
+    while (h + 1 > totalSize + block->size) {
         totalSize += block->size;
         block = block->next;
     }

@@ -75,7 +75,6 @@ void AddSym(data_t * data, caret_t * caret, pos_t * pos, int mode, char ch) {
             block2->prev = block3;
             ++caret->line->size;
 
-
             if (block3 != NULL) {
                 block3->next = block2;
             } else {

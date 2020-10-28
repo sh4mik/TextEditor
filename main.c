@@ -196,13 +196,19 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 
         case WM_SIZE: // отправляется окну после того, как изменился его размер
         {
-            // PrintGlobal(hdc, &data, &pos, &rSize, &tm); printf("\n");
+            int flag = 0;
+            if (rSize.width != (int)(LOWORD(lParam) / tm.tmAveCharWidth)) {
+                flag = 1;
+            }
             rSize.width = LOWORD(lParam) / tm.tmAveCharWidth; // функции сообщающие
             rSize.height = HIWORD(lParam) / tm.tmHeight; // размеры рабочей области
 
             if (mode == LAYOUT) {
-                //RecountLayout(hwnd, &data, tm, cxClient);
-                FirstCountLayout(hwnd, &data, &rSize); //TODO to delete
+                if (flag) {
+                    RecountLayout(hwnd, &data, &rSize);
+                }
+                PrintWindow(&data, &pos, 20);
+                //FirstCountLayout(hwnd, &data, &rSize); //TODO to delete
                 SetScrollRange(hwnd, SB_VERT, 0, SCROLL_CONST, FALSE);
                 SetScrollPos(hwnd, SB_VERT, PosToScroll(pos.v, data, pos, rSize.height), TRUE);
                 FindNearestLines(&data, &pos);
@@ -276,6 +282,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             pos.h = fmax(0,fmin(pos.h, data.longestSize - pos.h + 1));
             SetScrollPos(hwnd, SB_HORZ, pos.h, TRUE);
 
+            SetCaretPos((caret.sym - pos.h) * caret.w, (caret.line->number - pos.v) * caret.h);
             // Сигнал на отрисовку
             InvalidateRect(hwnd,NULL,TRUE);
             return 0;
@@ -335,7 +342,9 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         CheckMenuItem(hMenu,LAYOUT,MF_UNCHECKED);
                         if (data.textSize != 0) {
                             pos.h = 0;
-                            FirstCountDefault(hwnd, &data); //TODO поменять на нормальную
+                            //FirstCountDefault(hwnd, &data); //TODO поменять на нормальную
+                            RecountDefault(hwnd, &data);
+                            PrintWindow(&data, &pos, 10);
                             FindNearestLines(&data, &pos);
                             SetScrollRange(hwnd, SB_VERT, 0, SCROLL_CONST, FALSE);
                             SetScrollRange(hwnd, SB_HORZ, 0, fmax(1, data.longestSize - rSize.width), TRUE);
@@ -352,7 +361,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         CheckMenuItem(hMenu,DEFAULT,MF_UNCHECKED);
                         CheckMenuItem(hMenu,LAYOUT,MF_CHECKED);
                         if (data.textSize != 0) {
-                            FirstCountLayout(hwnd, &data, &rSize); //TODO поменять на нормальную
+                            //FirstCountLayout(hwnd, &data, &rSize); //TODO поменять на нормальную
+                            RecountLayout(hwnd, &data, &rSize);
                             FindNearestLines(&data, &pos);
                             SetScrollRange(hwnd, SB_VERT, 0, SCROLL_CONST, FALSE);
                             SetScrollPos(hwnd, SB_VERT, PosToScroll(pos.v, data, pos, rSize.height), TRUE);
@@ -434,7 +444,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                     SetScrollPos(hwnd, SB_HORZ, pos.h, TRUE);
 
                     //PrintBlocks(caret.line);
-                    PrintWindow(&data, &pos, rSize.height);
+                    //PrintWindow(&data, &pos, rSize.height);
 
                     InvalidateRect(hwnd,NULL,TRUE);
 
@@ -451,7 +461,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                     SetScrollPos(hwnd, SB_HORZ, pos.h, TRUE);
 
                     //PrintBlocks(caret.line);
-                    PrintWindow(&data, &pos, rSize.height);
+                    //PrintWindow(&data, &pos, rSize.height);
 
                     InvalidateRect(hwnd,NULL,TRUE);
 
@@ -467,12 +477,13 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                     SetScrollPos(hwnd, SB_HORZ, pos.h, TRUE);
 
                     //PrintBlocks(caret.line);
-                    PrintWindow(&data, &pos, rSize.height);
+                    //PrintWindow(&data, &pos, rSize.height);
 
                     InvalidateRect(hwnd,NULL,TRUE);
 
                     break;
             }
+            // PrintWindow(&data, &pos, rSize.height);
             return 0;
 
         case WM_PAINT:

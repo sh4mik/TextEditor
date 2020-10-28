@@ -9,45 +9,47 @@
 #define NEW_DATA 1
 
 typedef struct block {
-    char * start;
-    int size;
-    int type;
+    char * start;   // указатель на начало в буффере данных
+    int size;       // размер блока
+    int type;       // тип данных(старые или новые) - оказался пока не нужен
     struct block * next;
     struct block * prev;
 } block_t;
 
 typedef struct line {
-    int number;
-    char * start;
+    int number;     // номер в списке строк
+    char * start;   // указатель на начало строки
     int size;
-    int isGlobal;
+    int isGlobal;   // является ли строка новой в действительности (в режиме LAYOUT)
     struct line * next;
     struct line * prev;
-    block_t * first;
+    block_t * first;    // первый блок в строке
 } line_t;
 
 typedef struct data {
     char * text;
-    int textSize;  // size of text
-    char * buff;
-    char * buffPos;
-    int buffSize;  // size of buffer (with changes)
-    int linesSize;  // size of list of lines
-    int longestSize;  // size of longest line
-    line_t * firstLine;
+    int textSize;  // размер буфера для исходных данных
+    char * buff;    // указатель на начало буфера для дополнительных данных
+    char * buffPos; // текущяя позиция для записи в буфер
+    int buffSize;  // размер буфера для доп данных
+    int linesSize;  // количество строк
+    int longestSize;  // размер самой длинной строки
+    line_t * firstLine;  // первая строка
 } data_t;
 
 typedef struct pos {
-    int v;
-    int h;
+    int v; //позиция по вертикали
+    int h; // по горизонтали
 
-    char * abs;
+    char * abs; // номер символа (оказался ненужным)
 } pos_t;
 
+// размер окошка в колчестве умещающихся символов
 typedef struct size_s {
     int width;
     int height;
 } rsize_t;
+
 
 void FirstCountDefault(HWND hwnd, data_t * data);
 void FirstCountLayout(HWND hwnd, data_t * data, rsize_t * rSize);

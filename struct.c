@@ -1,4 +1,20 @@
 #include "struct.h"
+#include <assert.h>
+
+void MergeBlocks(block_t * block1, block_t * block2) {
+    assert(block1->next == block2);
+
+    if (block1 != NULL && block2 != NULL) {
+        if (block2->start == block1->start + block1->size) {
+            block1->size += block2->size;
+            block1->next = block2->next;
+            if (block2->next != NULL) {
+                block2->next->prev = block1;
+            }
+            free(block2);
+        }
+    }
+}
 
 void FirstCountDefault(HWND hwnd, data_t * data) {
     char * pos;
@@ -121,10 +137,242 @@ void FirstCountLayout(HWND hwnd, data_t * data, rsize_t * rSize){
 }
 
 void RecountDefault(HWND hwnd, data_t * data) {
+    line_t * deletedLine = data->firstLine->next;
+    line_t * prevLine;
+    block_t * block;
+    block_t * nlBlock;
 
+    data->longestSize = 0;
+    while (deletedLine != NULL) {
+        // если новая строка в режиме без верстки
+        if (deletedLine->isGlobal) {
+            deletedLine = deletedLine->next;
+        } else {
+            // ищем последний блок в строке
+            prevLine = deletedLine->prev;
+
+            block = prevLine->first;
+            while (block->next != NULL) {
+                block = block->next;
+            }
+
+            //соединим строки
+            prevLine->size += deletedLine->size;
+            prevLine->next = deletedLine->next;
+            if (deletedLine->next != NULL) {
+                deletedLine->next->prev = prevLine;
+            }
+
+            //теперь соединим блоки
+            block->next = deletedLine->first;
+            deletedLine->first->prev = block;
+
+            // склеиваем блоки, если это возможно
+            if (block->next->start == block->start + block->size) {
+                nlBlock = block->next;
+                block->size += nlBlock->size;
+                block->next = nlBlock->next;
+                if (nlBlock->next != NULL) {
+                    nlBlock->next->prev = block;
+                }
+                free(nlBlock);
+            }
+
+            // и удалим строку
+            free(deletedLine);
+            deletedLine = prevLine->next;
+
+            //уменьшим количество строк и обработаем максимально длинную строку
+            data->linesSize--;
+
+            if (prevLine->size > data->longestSize) {
+                data->longestSize = prevLine->size;
+            }
+        }
+    }
 }
+
 void RecountLayout(HWND hwnd, data_t * data, rsize_t * rSize) {
 
+    line_t * line = data->firstLine;
+    line_t * newLine;
+    line_t * deletedLine;
+    block_t * block;
+    block_t * prevBlock;
+    block_t * lastBlock;
+    block_t * newBlock;
+
+    int blockPos;
+    int restSize;
+    int i = 0;
+
+    int lineCurSize = 0;
+
+    while (line->next != NULL) {
+        lineCurSize = 0;
+        line->number = i;
+
+        block = line->first;
+        // получение последнего возможного блока
+        while (block != NULL && lineCurSize + block->size < rSize->width) {
+            lineCurSize += block->size;
+            prevBlock = block;
+            block = block->next;
+        }
+        if (block == NULL) {
+            if (line->next->isGlobal) {
+                line = line->next;
+            } else {
+                // случай, когда мы увеличиваем размер окна
+                prevBlock->next = line->next->first;
+                line->next->first->prev = prevBlock;
+
+                block = line->next->first;
+
+                if (block != NULL) {
+                    MergeBlocks(prevBlock, block);
+                    block = prevBlock;
+                }
+
+                while (block != NULL && lineCurSize + block->size <= rSize->width) {
+                    lineCurSize += block->size;
+                    block = block->next;
+                }
+
+                if (block == NULL) {
+                    deletedLine = line->next;
+
+                    line->next = deletedLine->next;
+                    if (deletedLine->next != NULL) {
+                        deletedLine->next->prev = line;
+                    }
+                    line->size += deletedLine->size;
+
+                    free(deletedLine);
+
+                    line = line->next;
+
+                } else {
+                    //создаем новый блок, если последний возможный не влезает
+                    blockPos = rSize->width - lineCurSize;
+                    newBlock = malloc(sizeof(block_t));
+
+                    newBlock->start = block->start + blockPos;
+                    newBlock->prev = NULL;
+                    newBlock->size = block->size - blockPos;
+                    newBlock->next = block->next;
+
+                    // Приводим в порядок исходные данные
+                    restSize = line->size + line->next->size - rSize->width;
+                    line->size = rSize->width;
+                    block->size = blockPos;
+                    block->next = NULL;
+
+                    line->next->size = restSize;
+                    line->next->first = newBlock;
+                    line->next->start = newBlock->start;
+
+                    line = line->next;
+                }
+            }
+
+        } else {
+            //создаем новый блок, если последний возможный не влезает
+            blockPos = rSize->width - lineCurSize;
+            newBlock = malloc(sizeof(block_t));
+
+            newBlock->start = block->start + blockPos;
+            newBlock->prev = NULL;
+            newBlock->size = block->size - blockPos;
+            newBlock->next = block->next;
+
+            // Приводим в порядок исходные данные
+            restSize = line->size - rSize->width;
+            line->size = rSize->width;
+            block->size = blockPos;
+            block->next = NULL;
+
+            MergeBlocks(newBlock, newBlock->next);
+
+
+            // Теперь переносим нашу цепочку блоков с поправкой на то, является ли строка новой в режиме DEFAULT
+            if (line->next->isGlobal) {
+                newLine = malloc(sizeof(line_t));
+
+                newLine->next = line->next;
+                line->next = newLine;
+                newLine->isGlobal = 0;
+                newLine->first = newBlock;
+                newLine->start = newBlock->start;
+                newLine->size = restSize;
+
+                newLine->prev = line;
+                line->next = newLine;
+
+                line = line->next;
+            } else {
+                lastBlock = newBlock;
+                while (lastBlock->next != NULL) {
+                    lastBlock = lastBlock->next;
+                }
+                line->next->first->prev = lastBlock;
+                lastBlock->next = line->next->first;
+                line->next->first = newBlock;
+                line->next->start = newBlock->start;
+                line->next->size += restSize;
+
+                line = line->next;
+            }
+        }
+
+        ++i;
+    }
+    line->number = i;
+
+    block = line->first;
+    lineCurSize = 0;
+
+    while (line != NULL) {
+        ++i;
+        while (block != NULL && lineCurSize + block->size <= rSize->width) {
+            lineCurSize += block->size;
+            block = block->next;
+        }
+        if (block == NULL) {
+            break;
+        }
+        //создаем новый блок, если последний возможный не влезает
+        blockPos = rSize->width - lineCurSize;
+        newBlock = malloc(sizeof(block_t));
+
+        newBlock->start = block->start + blockPos;
+        newBlock->prev = NULL;
+        newBlock->size = block->size - blockPos;
+        newBlock->next = block->next;
+
+        // Приводим в порядок исходные данные
+        restSize = line->size - rSize->width;
+        line->size = rSize->width;
+        block->size = blockPos;
+        block->next = NULL;
+
+        // Теперь переносим нашу цепочку блоков
+        newLine = malloc(sizeof(line_t));
+
+        newLine->next = line->next;
+        line->next = newLine;
+        newLine->isGlobal = 0;
+        newLine->first = newBlock;
+        newLine->start = newBlock->start;
+        newLine->size = restSize;
+
+        newLine->prev = line;
+        line->next = newLine;
+
+        line = line->next;
+    }
+
+    data->linesSize = i;
 }
 
 void FindNearestLines(data_t * data, pos_t * pos) {
