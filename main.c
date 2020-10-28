@@ -196,26 +196,10 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 
         case WM_SIZE: // отправляется окну после того, как изменился его размер
         {
-            int flag = 0;
-            if (rSize.width != (int)(LOWORD(lParam) / tm.tmAveCharWidth)) {
-                flag = 1;
-            }
             rSize.width = LOWORD(lParam) / tm.tmAveCharWidth; // функции сообщающие
             rSize.height = HIWORD(lParam) / tm.tmHeight; // размеры рабочей области
 
-            if (mode == LAYOUT) {
-                if (flag) {
-                    RecountLayout(hwnd, &data, &rSize);
-                }
-                PrintWindow(&data, &pos, 20);
-                //FirstCountLayout(hwnd, &data, &rSize); //TODO to delete
-                SetScrollRange(hwnd, SB_VERT, 0, SCROLL_CONST, FALSE);
-                SetScrollPos(hwnd, SB_VERT, PosToScroll(pos.v, data, pos, rSize.height), TRUE);
-                FindNearestLines(&data, &pos);
-            }
-            if (mode == DEFAULT) {
-                SetScrollRange(hwnd, SB_HORZ, 0, fmax(1, data.longestSize - rSize.width), TRUE);
-            }
+            SetScrollRange(hwnd, SB_HORZ, 0, fmax(1, data.longestSize - rSize.width), TRUE);
 
             // InvalidateRect(hwnd,NULL,TRUE);
             return 0;
@@ -305,6 +289,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         DestroyCaret();
                         CreateCaret(hwnd, NULL, tm.tmAveCharWidth / CARET_SIZE_COEFF, tm.tmHeight);
                         pos.abs = data.text;
+
                         if (mode==DEFAULT) {
                             FirstCountDefault(hwnd, &data);
                             SetScrollRange(hwnd, SB_VERT, 0, SCROLL_CONST, FALSE);
@@ -312,12 +297,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 
                             SetScrollPos(hwnd, SB_VERT, PosToScroll(pos.v, data, pos, rSize.height), TRUE);
                             SetScrollPos(hwnd, SB_HORZ, pos.h, TRUE);
-                            InvalidateRect(hwnd,NULL,TRUE);
-                        }
-                        else if(mode == LAYOUT) {
-                            FirstCountLayout(hwnd, &data, &rSize);
-                            SetScrollRange(hwnd, SB_VERT, 0, SCROLL_CONST, FALSE);
-                            SetScrollPos(hwnd, SB_VERT, PosToScroll(pos.v, data, pos, rSize.height), TRUE);
                             InvalidateRect(hwnd,NULL,TRUE);
                         }
 
@@ -332,44 +311,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 {
                     freeData(&data);
                     SendMessage(hwnd, WM_DESTROY, 0, 0L);
-                    break;
-                }
-                case DEFAULT:
-                {
-                    if (mode!=DEFAULT){
-                        mode = DEFAULT;
-                        CheckMenuItem(hMenu,DEFAULT,MF_CHECKED);
-                        CheckMenuItem(hMenu,LAYOUT,MF_UNCHECKED);
-                        if (data.textSize != 0) {
-                            pos.h = 0;
-                            //FirstCountDefault(hwnd, &data); //TODO поменять на нормальную
-                            RecountDefault(hwnd, &data);
-                            PrintWindow(&data, &pos, 10);
-                            FindNearestLines(&data, &pos);
-                            SetScrollRange(hwnd, SB_VERT, 0, SCROLL_CONST, FALSE);
-                            SetScrollRange(hwnd, SB_HORZ, 0, fmax(1, data.longestSize - rSize.width), TRUE);
-                            SetScrollPos(hwnd, SB_VERT, PosToScroll(pos.v, data, pos, rSize.height), TRUE);
-                            InvalidateRect(hwnd,NULL,TRUE);
-                        }
-                    }
-                    break;
-                }
-                case LAYOUT:
-                {
-                    if (mode != LAYOUT){
-                        mode = LAYOUT;
-                        CheckMenuItem(hMenu,DEFAULT,MF_UNCHECKED);
-                        CheckMenuItem(hMenu,LAYOUT,MF_CHECKED);
-                        if (data.textSize != 0) {
-                            //FirstCountLayout(hwnd, &data, &rSize); //TODO поменять на нормальную
-                            RecountLayout(hwnd, &data, &rSize);
-                            FindNearestLines(&data, &pos);
-                            SetScrollRange(hwnd, SB_VERT, 0, SCROLL_CONST, FALSE);
-                            SetScrollPos(hwnd, SB_VERT, PosToScroll(pos.v, data, pos, rSize.height), TRUE);
-                            InvalidateRect(hwnd,NULL,TRUE);
-                        }
-
-                    }
                     break;
                 }
                 default:

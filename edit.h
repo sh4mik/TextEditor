@@ -9,4 +9,5 @@ void AddSym(data_t * data, caret_t * caret, pos_t * pos, int mode, char ch);
 void AddEnter(data_t * data, caret_t * caret, pos_t * pos, int mode, char ch);
 
 void RecountAdd(data_t * data, caret_t * caret, pos_t * pos, int mode);
+void DeleteSym(data_t * data, caret_t * caret, pos_t * pos, int mode);
 #endif // EDIT_H_INCLUDED

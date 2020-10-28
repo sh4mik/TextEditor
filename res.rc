@@ -8,9 +8,4 @@ MainMenu MENU
         MENUITEM "Open", ID_FILE_OPEN
         MENUITEM "Exit", IDM_EXIT
     }
-    POPUP "View"
-    {
-        MENUITEM "Default", DEFAULT
-        MENUITEM "Layout", LAYOUT
-    }
 }

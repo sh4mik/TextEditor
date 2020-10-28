@@ -52,7 +52,8 @@ void AddSym(data_t * data, caret_t * caret, pos_t * pos, int mode, char ch) {
 
                 if (block->size == 0 && caret->line->first == block) {
                     caret->line->first = block2;
-                    block2->prev = caret->line->first;
+                    caret->line->start = block2->start;
+                    block2->prev = NULL;
                     free(block);
                 }
 

@@ -52,10 +52,8 @@ typedef struct size_s {
 
 
 void FirstCountDefault(HWND hwnd, data_t * data);
-void FirstCountLayout(HWND hwnd, data_t * data, rsize_t * rSize);
 
 void RecountDefault(HWND hwnd, data_t * data);
-void RecountLayout(HWND hwnd, data_t * data, rsize_t * rSize);
 
 void FindNearestLines(data_t * data, pos_t * pos);
 
