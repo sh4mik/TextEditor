@@ -92,6 +92,9 @@ void AddSym(data_t * data, caret_t * caret, pos_t * pos, int mode, char ch) {
         block3->start = block->start + blockPos;
         block3->size = block->size - blockPos;
         block3->next = block->next;
+        if (block3->next != NULL) {
+            block3->next->prev = block3;
+        }
         block3->prev = block2;
 
         block->size = blockPos;
@@ -367,6 +370,9 @@ void DeleteSym(data_t * data, caret_t * caret, pos_t * pos, int mode) {
         block2 = malloc(sizeof(block_t));
 
         block2->next = block->next;
+        if (block2->next != NULL) {
+            block2->next->prev = block2;
+        }
         block2->prev = block;
 
         block->next = block2;

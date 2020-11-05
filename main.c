@@ -98,7 +98,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,  // описатель самой программе
     return messages.wParam;
 }
 
-BOOL ShowDialog(HWND hwnd,TCHAR* sfile)
+void ShowDialog(HWND hwnd,TCHAR* sfile)
 {
 
     OPENFILENAME ofn;
@@ -125,7 +125,7 @@ BOOL ShowDialog(HWND hwnd,TCHAR* sfile)
     ofn.lpTemplateName      = 0;
     ofn.Flags               = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
 
-    return GetOpenFileName(&ofn);
+    GetOpenFileName(&ofn);
 }
 
 /*  This function is called by the Windows function DispatchMessage()  */
@@ -289,9 +289,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             {
                 case ID_FILE_OPEN:
                 {
-                    free(&file_name);
-                    if (!ShowDialog(hwnd,file_name)) //если диалог открылся
-                        break;
+                    ZeroMemory(&file_name, sizeof(file_name));
+                    ShowDialog(hwnd,file_name);
                     freeData(&data);
                     ZeroMemory(&pos, sizeof(pos_t));
 
@@ -458,7 +457,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 
         case WM_DESTROY:
             PostQuitMessage (0);       /* send a WM_QUIT to the message queue */
-            free(&file_name);
             freeData(&data);
             break;
         default:                      /* for messages that we don't deal with */
